@@ -11,7 +11,7 @@ export const DEFAULT_STREAM_WINDOW = 8;
 const capabilityNameSchema = z.enum(DEVICE_CAPABILITIES);
 const identifierSchema = z.string().min(1).max(160);
 const isoDateSchema = z.string().datetime({ offset: true });
-const jsonRecordSchema = z.record(z.unknown());
+const jsonRecordSchema = z.record(z.string(), z.unknown());
 
 export const capabilityDescriptorSchema = z.object({
   name: capabilityNameSchema,

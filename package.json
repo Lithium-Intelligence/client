@@ -29,10 +29,10 @@
     "release:verify-tag": "bun scripts/verify-release-tag.ts"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5.9.0"
+    "@types/bun": "^1.4.2",
+    "typescript": "^7.0.2"
   }
 }
