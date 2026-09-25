@@ -8,13 +8,14 @@
   "homepage": "https://ai.lithium.dev.br",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lithium/client.git"
+    "url": "https://github.com/Lithium-Intelligence/client.git"
   },
   "bugs": {
-    "url": "https://github.com/lithium/client/issues"
+    "url": "https://github.com/Lithium-Intelligence/client/issues"
   },
   "engines": {
-    "bun": ">=1.3.0"
+    "node": ">=18",
+    "bun": ">=1.4.0"
   },
   "scripts": {
     "start": "bun src/client-entry.ts",
@@ -26,13 +27,28 @@
     "build:linux": "bun scripts/build-linux.ts",
     "build:release": "bun run build:windows && bun run build:linux && bun scripts/checksums.ts",
     "checksums": "bun scripts/checksums.ts",
-    "release:verify-tag": "bun scripts/verify-release-tag.ts"
+    "release:verify-tag": "bun scripts/verify-release-tag.ts",
+    "package:pack": "bun scripts/pack-package.ts",
+    "package:smoke:help": "bun bin/lithium-client.ts help"
   },
   "dependencies": {
+    "bun": "1.4.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
     "typescript": "^7.0.2"
-  }
+  },
+  "bin": {
+    "lithium-client": "./bin/lithium-client.ts"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "lithium-client.example.json",
+    "README.md",
+    "SECURITY.md",
+    "LICENSE.md",
+    "THIRD_PARTY_NOTICES.md"
+  ]
 }

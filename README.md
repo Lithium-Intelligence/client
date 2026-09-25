@@ -8,15 +8,38 @@ The repository contains the machine-side client only: enrollment, device
 credential storage, connection/reconnect, Workspace announcements, filesystem,
 process and terminal capabilities, local execution policy, packaging and tests.
 
-## Releases
+## Quick start
+
+The Client can run directly from the GitHub repository without a manual install:
+
+```bash
+npx github:Lithium-Intelligence/client
+bunx github:Lithium-Intelligence/client
+```
+
+Useful package-runner commands:
+
+```bash
+npx github:Lithium-Intelligence/client help
+npx github:Lithium-Intelligence/client status
+bunx github:Lithium-Intelligence/client help
+bunx github:Lithium-Intelligence/client status
+```
+
+The package bin is Bun-native. `bunx` uses the installed Bun runtime; `npx`
+installs the pinned Bun runtime dependency automatically, so a separate Bun
+installation is not required for the npx path.
+
+On Linux, package-runner mode creates `./lithium-client.json` when missing and
+stores the device credential under the current user's state directory. Native
+systemd deployments continue to use the paths documented in `README-LINUX.md`.
+
+## Native releases
 
 Supported release assets:
 
 - **Windows x64** — `lithium-client-windows-x64.exe`
 - **Linux x64** — `lithium-client-linux-x64.tar.gz`
-
-Source development requires Bun. Direct `npx` / `bunx` installation is not a
-supported distribution path yet.
 
 ## Security defaults
 

@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, posix, resolve, win32 } from "node:path";
 import type { DeviceRuntimeConfig } from "../device/config";
 
 export interface LithiumClientConfig extends DeviceRuntimeConfig {
@@ -60,6 +60,10 @@ function isStandaloneExecutable(execPath = process.execPath): boolean {
   return lower.endsWith(".exe") && !lower.endsWith("\\bun.exe") && !lower.endsWith("/bun.exe");
 }
 
+function pathApiForExecutable(execPath: string): typeof posix | typeof win32 {
+  return /^[A-Za-z]:[\\/]/u.test(execPath) || execPath.includes("\\") ? win32 : posix;
+}
+
 export function resolveLithiumClientConfigPath(
   environment: Environment = Bun.env,
   execPath = process.execPath,
@@ -67,7 +71,9 @@ export function resolveLithiumClientConfigPath(
 ): string {
   const explicit = environment.LITHIUM_CLIENT_CONFIG_FILE?.trim();
   if (explicit) return resolve(cwd, explicit);
-  return isStandaloneExecutable(execPath) ? join(dirname(execPath), "lithium-client.json") : resolve(cwd, "lithium-client.json");
+  if (!isStandaloneExecutable(execPath)) return resolve(cwd, "lithium-client.json");
+  const pathApi = pathApiForExecutable(execPath);
+  return pathApi.join(pathApi.dirname(execPath), "lithium-client.json");
 }
 
 export function ensureLithiumClientConfigFile(path: string): string {

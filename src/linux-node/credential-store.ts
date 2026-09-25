@@ -83,6 +83,6 @@ export async function resolveLithiumLinuxNodeCredential(options: {
   });
   if (stored) return stored;
   throw new Error(
-    "Linux Node credential ausente. Execute 'lithium-node enroll' em TTY ou provisione LITHIUM_DEVICE_CREDENTIAL uma vez por secret store.",
+    "Linux Node credential is missing. Run 'lithium-client enroll' in a TTY or provision LITHIUM_DEVICE_CREDENTIAL once through a secret store.",
   );
 }

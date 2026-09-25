@@ -41,7 +41,7 @@ function printConnectionState(snapshot: DeviceClientSnapshot, background: boolea
     return;
   }
   if (snapshot.state === "handshaking") {
-    console.log("Autenticando este device no Lithium...");
+    console.log("Authenticating this device with Lithium...");
     return;
   }
   if (snapshot.state === "retrying") {
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
     ...(bootstrapCredential ? { bootstrapCredential } : {}),
     acquireCredential: async () => {
       const login = await promptLithiumAccountLogin();
-      console.log(`Registrando device ${clientHostname} em ${new URL(config.serverUrl).origin}...`);
+      console.log(`Enrolling device ${clientHostname} at ${new URL(config.serverUrl).origin}...`);
       return enrollDeviceWithAccount({
         serverUrl: config.serverUrl,
         deviceName: clientHostname,

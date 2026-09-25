@@ -5,6 +5,7 @@ const root = resolve(import.meta.dir, "..");
 const srcRoot = resolve(root, "src");
 const scanRoots = [
   "src",
+  "bin",
   "scripts",
   "test",
   "deploy",

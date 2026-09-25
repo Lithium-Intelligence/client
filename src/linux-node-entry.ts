@@ -102,16 +102,30 @@ async function run(configPath: string, credentialPath: string): Promise<void> {
   process.once("SIGTERM", () => void shutdown("SIGTERM"));
 }
 
+function printHelp(): void {
+  console.log(`Lithium Client (Linux)
+
+Usage:
+  lithium-client run       Connect and expose local capabilities.
+  lithium-client enroll    Sign in and store a private device credential.
+  lithium-client status    Show local configuration and enrollment state.
+  lithium-client help      Show this help.
+
+Aliases:
+  login, relink            Same as enroll.`);
+}
+
 async function main(): Promise<void> {
   requireLinux();
   const configPath = resolveLithiumLinuxNodeConfigPath();
   const credentialPath = resolveLithiumLinuxNodeCredentialPath();
   const command = (Bun.argv[2] ?? "run").trim().toLowerCase();
 
-  if (command === "enroll") return enroll(configPath, credentialPath);
+  if (command === "help" || command === "--help" || command === "-h") return printHelp();
+  if (command === "enroll" || command === "login" || command === "relink") return enroll(configPath, credentialPath);
   if (command === "status") return status(configPath, credentialPath);
   if (command === "run") return run(configPath, credentialPath);
-  throw new Error("Uso: lithium-node [run|enroll|status]");
+  throw new Error("Usage: lithium-client [run|enroll|status|help]");
 }
 
 void main().catch((error) => {
