@@ -1,32 +1,29 @@
-# Lithium Node Linux headless
+# Lithium Client — Linux headless node
 
-O Lithium Node é o executor local de capabilities em um host Linux. Ele roda como processo e identidade de sistema separados do Lithium Server web. O Server continua sendo a autoridade de Node/Workspace, ownership, autorização, routing e audit.
+The Linux client runs as a dedicated system process and exposes local
+capabilities only inside configured Workspace roots.
 
-## Boundary
+It provides:
 
-O processo `lithium-node` contém apenas:
+- authenticated connection using a device credential;
+- filesystem, process and terminal capabilities;
+- executable/root/shell policy;
+- Workspace and capability announcements;
+- heartbeat and reconnect.
 
-- conexão Relay autenticada por `ldev_`;
-- `DeviceRuntime` (filesystem/process/terminal);
-- policy local de roots/executáveis/shell;
-- anúncio de Workspaces e capabilities;
-- heartbeat/reconnect.
+## Recommended layout
 
-Ele não contém Project, Board, Card, MCP Gateway central, painel web, SQLite da Platform ou `TaskManager`.
-
-## Layout recomendado
-
-- app: `/opt/lithium-client/lithium-node`
+- executable: `/opt/lithium-client/lithium-node`
 - config: `/etc/lithium-node/config.json`
-- credential: `/var/lib/lithium-node/device-credential` (0600)
-- workspace próprio: `/srv/lithium-node/workspaces`
-- projetos opcionais: `/srv/projects`
+- credential: `/var/lib/lithium-node/device-credential`
+- default Workspace: `/srv/lithium-node/workspaces`
 - service: `lithium-client.service`
 - user/group: `lithium-node:lithium-node`
 
-O exemplo não expõe `/var/lib/lithium-server-pilot` por padrão. Banco, tokens e backups do Server central não devem virar Workspace acidentalmente.
+Do not include application databases, backups, credentials or unrelated host
+directories in `workspaceRoots`.
 
-## Instalação
+## Installation
 
 ```bash
 id -u lithium-node >/dev/null 2>&1 || \
@@ -34,7 +31,6 @@ id -u lithium-node >/dev/null 2>&1 || \
 
 install -d -o lithium-node -g lithium-node -m 0700 /var/lib/lithium-node
 install -d -o lithium-node -g lithium-node -m 0750 /srv/lithium-node/workspaces
-install -d -o lithium-node -g lithium-node -m 0750 /srv/projects
 install -d -m 0755 /opt/lithium-client
 install -d -m 0750 -o root -g lithium-node /etc/lithium-node
 
@@ -43,11 +39,13 @@ install -m 0640 -o root -g lithium-node lithium-node.example.json /etc/lithium-n
 install -m 0644 lithium-client.service /etc/systemd/system/
 ```
 
-Revise `workspaceRoots`, executable allowlist e shell policy antes do enrollment.
+Review `workspaceRoots`, executable allowlist and shell policy before
+enrollment.
 
 ## Enrollment
 
-O caminho preferido é interativo no próprio host. A senha web é usada apenas para criar/obter a `ldev_` e não é persistida:
+Interactive enrollment is preferred. The account password is used only during
+enrollment and is not persisted.
 
 ```bash
 runuser -u lithium-node --preserve-environment -- \
@@ -56,11 +54,14 @@ runuser -u lithium-node --preserve-environment -- \
   /opt/lithium-client/lithium-node enroll
 ```
 
-O arquivo final é gravado com mode 0600. O serviço não recebe a senha da conta.
+The issued device credential is stored with mode 0600.
 
-Para provisioning automatizado, um secret store pode injetar `LITHIUM_DEVICE_CREDENTIAL` em uma execução one-shot. O Node persiste a credencial em 0600; remova a variável da automação depois. Não grave `ldev_` em unit, config, shell history, logs, board chat ou audit.
+For automated provisioning, a secret store may inject
+`LITHIUM_DEVICE_CREDENTIAL` for a one-shot enrollment/start. Remove the
+environment variable after the credential has been persisted. Never place the
+credential in config, the systemd unit, shell history or logs.
 
-## Operação
+## Operation
 
 ```bash
 systemctl daemon-reload
@@ -69,7 +70,7 @@ systemctl status lithium-client.service
 journalctl -u lithium-client.service
 ```
 
-Status sem revelar segredo:
+Status without exposing the credential:
 
 ```bash
 runuser -u lithium-node --preserve-environment -- \
@@ -78,22 +79,23 @@ runuser -u lithium-node --preserve-environment -- \
   /opt/lithium-client/lithium-node status
 ```
 
-## Hardening e Workspaces
+## Hardening
 
-A unit usa `ProtectSystem=strict`, `NoNewPrivileges`, capability set vazio, namespaces restritos e `ReadWritePaths` explícitos. Se adicionar um `workspaceRoot`, ajuste também a unit. Ter um root no JSON não deve ser usado para contornar a sandbox do systemd.
+The supplied unit uses `ProtectSystem=strict`, `NoNewPrivileges`, an empty
+capability set, restricted namespaces and explicit `ReadWritePaths`.
 
-O Server recebe os roots pelo anúncio do Node, mas as tools públicas trabalham por `workspaceId`; o root físico não é exposto em `workspace_list/get`.
+If a new Workspace root is added to config, update the unit sandbox
+accordingly. A JSON root does not override systemd filesystem restrictions.
 
-Unsafe shell fica desabilitado no exemplo. Habilitá-lo requer alteração explícita do config e continua sujeito ao routing/policy do Workspace no Server.
+Unsafe shell is disabled in the example config and should remain disabled
+unless explicitly required.
 
-## Update e rollback
+## Update and rollback
 
-O Node é independente do Server:
+1. stop `lithium-client.service`;
+2. preserve the current binary;
+3. replace `/opt/lithium-client/lithium-node`;
+4. start the service;
+5. run `lithium-node status` and verify the connection.
 
-1. pare somente `lithium-client.service`;
-2. preserve o bundle anterior;
-3. substitua `/opt/lithium-client/lithium-node`;
-4. inicie o serviço;
-5. confirme Node online e Workspaces anunciados no Server.
-
-Rollback do Node não exige parar o Lithium Server nem modificar `platform.sqlite`.
+Rollback by restoring the previous binary and restarting the service.

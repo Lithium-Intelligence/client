@@ -50,7 +50,7 @@ function normalizeAgentUrl(input: string): string {
   const url = new URL(input);
   if (url.protocol === "http:") url.protocol = "ws:";
   else if (url.protocol === "https:") url.protocol = "wss:";
-  if (url.protocol !== "ws:" && url.protocol !== "wss:") throw new Error("Lithium Server URL must use http(s) or ws(s).");
+  if (url.protocol !== "ws:" && url.protocol !== "wss:") throw new Error("Lithium endpoint URL must use http(s) or ws(s).");
   if (url.pathname === "/" || !url.pathname) url.pathname = "/agent/connect";
   return url.toString();
 }
@@ -251,13 +251,13 @@ export class LithiumDeviceClient {
       const controller = this.inflight.get(message.id);
       if (controller) {
         this.inflight.delete(message.id);
-        controller.abort(new Error(message.reason ?? "Cancelled by server."));
+        controller.abort(new Error(message.reason ?? "Cancelled remotely."));
       }
       return;
     }
 
     if (message.type === "stream_ack") {
-      // Stream producers use the server-advertised window. Existing capabilities return bounded results,
+      // Stream producers use the negotiated window. Existing capabilities return bounded results,
       // so ACKs are accepted for forward compatibility without changing capability semantics.
       return;
     }
@@ -272,7 +272,7 @@ export class LithiumDeviceClient {
     }
     if ((message.context?.accountId && message.context.accountId !== this.welcome.accountId)
       || (message.context?.deviceId && message.context.deviceId !== this.welcome.deviceId)) {
-      this.sendError(message.id, "CONTEXT_MISMATCH", "Server call context does not match this authenticated device.");
+      this.sendError(message.id, "CONTEXT_MISMATCH", "Remote call context does not match this authenticated device.");
       try { this.socket?.close(4403, "CONTEXT_MISMATCH"); } catch {}
       return;
     }

@@ -39,7 +39,7 @@ async function status(configPath: string, credentialPath: string): Promise<void>
   const credential = await loadLithiumLinuxNodeCredential(credentialPath);
   console.log(JSON.stringify({
     service: "lithium-node",
-    serverUrl: new URL(config.serverUrl).origin,
+    endpoint: new URL(config.serverUrl).origin,
     nodeName: config.deviceName ?? hostname(),
     configPath,
     credentialPath,
@@ -68,7 +68,7 @@ async function run(configPath: string, credentialPath: string): Promise<void> {
   console.log(JSON.stringify({
     service: "lithium-node",
     event: "starting",
-    server: new URL(config.serverUrl).origin,
+    endpoint: new URL(config.serverUrl).origin,
     workspaces: config.workspaceRoots.length,
   }));
 

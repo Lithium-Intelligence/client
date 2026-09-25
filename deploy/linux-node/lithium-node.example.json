@@ -1,10 +1,9 @@
 {
   "serverUrl": "https://ai.lithium.dev.br",
   "clientVersion": "0.1.0",
-  "deviceName": "lithium-vps-node",
+  "deviceName": "lithium-linux-node",
   "workspaceRoots": [
-    "/srv/lithium-node/workspaces",
-    "/srv/projects"
+    "/srv/lithium-node/workspaces"
   ],
   "defaultTimeoutMs": 15000,
   "maxTimeoutMs": 120000,

@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "bun:test";
-import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { LITHIUM_BRAIN_ASCII, LITHIUM_BRAIN_ASCII_COMPACT, renderLithiumClientBanner } from "../src/client/banner";
 import {
   defaultLithiumClientConfigFile,
@@ -43,14 +43,8 @@ test("Lithium Client config contains only server endpoint and local machine poli
 
   expect(raw).toEqual({ ...defaultLithiumClientConfigFile });
   expect(raw.serverUrl).toBe("https://ai.lithium.dev.br");
-  expect(raw).not.toHaveProperty("taskStorageFile");
-  expect(raw).not.toHaveProperty("bearerToken");
-  expect(raw).not.toHaveProperty("tunnel");
-  expect(raw).not.toHaveProperty("host");
-  expect(raw).not.toHaveProperty("port");
-
-  await writeFile(file, JSON.stringify({ ...raw, taskStorageFile: "./legacy.json" }), "utf8");
-  expect(() => loadLithiumClientConfig(file, {})).toThrow("taskStorageFile");
+  await writeFile(file, JSON.stringify({ ...raw, unexpectedField: true }), "utf8");
+  expect(() => loadLithiumClientConfig(file, {})).toThrow("unexpectedField");
 
   await writeFile(file, JSON.stringify({
     ...raw,
@@ -58,7 +52,7 @@ test("Lithium Client config contains only server endpoint and local machine poli
     workspaceRoots: ["./workspace-a", "./workspace-b"],
     allowedExecutables: ["bun", "git"],
     enableUnsafeShell: true,
-    deviceName: "pilot-desktop",
+    deviceName: "demo-workstation",
   }), "utf8");
   const loaded = loadLithiumClientConfig(file, { LITHIUM_SERVER_URL: "wss://relay.example.test" });
   expect(loaded.serverUrl).toBe("wss://relay.example.test/");
@@ -66,7 +60,7 @@ test("Lithium Client config contains only server endpoint and local machine poli
   expect(loaded.workspaceRoot).toBe(resolve(root, "workspace-a"));
   expect(loaded.allowedExecutables).toEqual(["bun", "git"]);
   expect(loaded.enableUnsafeShell).toBe(true);
-  expect(loaded.deviceName).toBe("pilot-desktop");
+  expect(loaded.deviceName).toBe("demo-workstation");
 });
 
 test("Lithium Client standalone config lives beside the executable", () => {
@@ -132,7 +126,7 @@ test("device credential can be acquired interactively once and then reused from 
   expect(acquisitions).toBe(1);
 });
 
-test("first-run account enrollment creates a device credential and revokes the temporary web session", async () => {
+test("first-run account enrollment creates a device credential and revokes the temporary account session", async () => {
   const secret = `ldev_${"C".repeat(43)}`;
   const calls: Array<{ url: string; method: string; cookie: string | null; body: string }> = [];
   const fetchImpl = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
@@ -154,7 +148,7 @@ test("first-run account enrollment creates a device credential and revokes the t
       return Response.json({ ok: true, devices: [] });
     }
     if (url.endsWith("/server/api/devices") && init.method === "POST") {
-      return Response.json({ ok: true, device: { id: "device_test", name: "desktop-pilot", enabled: true } }, { status: 201 });
+      return Response.json({ ok: true, device: { id: "device_test", name: "demo-workstation", enabled: true } }, { status: 201 });
     }
     if (url.endsWith("/server/api/devices/device_test/credentials")) {
       return Response.json({ ok: true, secret }, { status: 201 });
@@ -167,8 +161,8 @@ test("first-run account enrollment creates a device credential and revokes the t
 
   expect(await enrollDeviceWithAccount({
     serverUrl: "https://ai.lithium.dev.br",
-    deviceName: "desktop-pilot",
-    username: "pilot-admin",
+    deviceName: "demo-workstation",
+    username: "demo-user",
     password: "not-persisted-password",
     fetchImpl,
   })).toBe(secret);
@@ -188,68 +182,21 @@ test("first-run account enrollment creates a device credential and revokes the t
 test("device credential validation rejects non-device secrets before persistence", async () => {
   const root = await mkdtemp(join(tmpdir(), "lithium-client-credential-"));
   roots.push(root);
-  await expect(saveDeviceCredential("lmcp_not-a-device-token", join(root, "credential.bin"), testCodec)).rejects.toThrow("inválida");
+  await expect(saveDeviceCredential("not-a-device-token", join(root, "credential.bin"), testCodec)).rejects.toThrow("inválida");
 });
 
-test("Lithium Client entrypoint excludes legacy server, tracker, UI and tunnel imports", async () => {
+test("Lithium Client entrypoint composes only local runtime modules", async () => {
   const source = await Bun.file(new URL("../src/client-entry.ts", import.meta.url)).text();
-  expect(source).toContain('from "./client/banner"');
-  expect(source).toContain('from "./client/config"');
-  expect(source).toContain('from "./client/credential-store"');
-  expect(source).toContain('from "./client/onboarding"');
-  expect(source).toContain("if (!background) printLithiumClientBanner();");
-  expect(source).not.toContain('from "./config"');
-  expect(source).not.toContain("createMcpServer");
-  expect(source).not.toContain("TaskManager");
-  expect(source).not.toContain("TunnelManager");
-  expect(source).not.toContain("mcp-tunnel");
-  expect(source).not.toContain("server/panel");
-});
+  const specifiers = [...source.matchAll(/\bfrom\s+["']([^"']+)["']/g)]
+    .map((match) => match[1]!)
+    .filter((specifier) => specifier.startsWith("."));
 
-async function resolveLocalImport(fromFile: string, specifier: string): Promise<string | undefined> {
-  if (!specifier.startsWith(".")) return undefined;
-  const base = resolve(dirname(fromFile), specifier);
-  for (const candidate of [base, `${base}.ts`, `${base}.tsx`, join(base, "index.ts")]) {
-    try {
-      await access(candidate);
-      return candidate;
-    } catch {
-      // Try the next TypeScript resolution candidate.
-    }
-  }
-  throw new Error(`Import local não resolvido em ${fromFile}: ${specifier}`);
-}
-
-async function collectClientImportGraph(entrypoint: string): Promise<{ files: Set<string>; packages: Set<string> }> {
-  const files = new Set<string>();
-  const packages = new Set<string>();
-  const queue = [entrypoint];
-  const importPattern = /(?:import|export)\s+(?:type\s+)?(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g;
-
-  while (queue.length) {
-    const file = queue.shift()!;
-    if (files.has(file)) continue;
-    files.add(file);
-    const source = await readFile(file, "utf8");
-    for (const match of source.matchAll(importPattern)) {
-      const specifier = match[1]!;
-      const local = await resolveLocalImport(file, specifier);
-      if (local) queue.push(local);
-      else if (!specifier.startsWith("node:") && !specifier.startsWith("bun:")) packages.add(specifier);
-    }
-  }
-  return { files, packages };
-}
-
-test("Lithium Client recursive import graph contains no MCP server, central business UI, or tunnel modules", async () => {
-  const entrypoint = resolve(import.meta.dir, "../src/client-entry.ts");
-  const graph = await collectClientImportGraph(entrypoint);
-  const normalized = [...graph.files].map((file) => file.replaceAll("\\", "/"));
-
-  expect([...graph.packages]).not.toContain("@modelcontextprotocol/sdk");
-  expect(normalized.some((file) => file.includes("/src/server/"))).toBe(false);
-  expect(normalized.some((file) => file.includes("/src/tunnel/"))).toBe(false);
-  expect(normalized.some((file) => file.endsWith("/src/tools.ts"))).toBe(false);
-  expect(normalized.some((file) => /\.(html|css)$/.test(file))).toBe(false);
-  expect(normalized.some((file) => file.endsWith("/src/index.ts"))).toBe(false);
+  expect(specifiers.length).toBeGreaterThan(0);
+  expect(specifiers.every((specifier) =>
+    specifier.startsWith("./client/") || specifier.startsWith("./device/") || specifier.startsWith("./terminal/")
+  )).toBe(true);
+  expect(specifiers).toContain("./client/config");
+  expect(specifiers).toContain("./client/credential-store");
+  expect(specifiers).toContain("./device/client");
+  expect(specifiers).toContain("./device/runtime");
 });

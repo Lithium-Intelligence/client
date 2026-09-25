@@ -190,10 +190,10 @@ export class TerminalSession {
       const tail = decoder.decode();
       if (tail) this.logBuffer.append(channel, tail);
     } catch (error) {
-      // Stream-reading failures should not crash MegaMCP. Preserve the failure in
+      // Stream-reading failures should not crash the client. Preserve the failure in
       // stderr so callers can diagnose it while the process lifecycle continues.
       const message = error instanceof Error ? error.message : String(error);
-      this.logBuffer.append("stderr", `[MegaMCP] Falha ao ler ${channel}: ${message}\n`);
+      this.logBuffer.append("stderr", `[Lithium Client] Falha ao ler ${channel}: ${message}\n`);
     } finally {
       reader.releaseLock();
     }

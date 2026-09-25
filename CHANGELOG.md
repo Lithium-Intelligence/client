@@ -8,5 +8,5 @@ Initial standalone GitHub-ready Client boundary.
 - Linux x64 headless Node package with private credential file and hardened systemd unit.
 - Workspace-scoped filesystem/process/terminal capabilities.
 - Executable allowlist and unsafe-shell opt-in.
-- Interactive device enrollment against Lithium Server.
+- Interactive device enrollment against a Lithium endpoint.
 - CI, release packaging and SHA-256 checksums.

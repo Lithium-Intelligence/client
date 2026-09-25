@@ -260,7 +260,7 @@ test("status inspection reports reachability and credential presence without ret
     platform: "win32",
     execPath: "C:\\Apps\\Lithium\\lithium-client.exe",
     runProgram: async () => ({ exitCode: 1, stdout: "", stderr: "" }),
-    fetchImpl: (async () => Response.json({ ok: true, status: "ok", storage: { status: "ok" } })) as unknown as typeof fetch,
+    fetchImpl: (async () => Response.json({ ok: true, status: "ok" })) as unknown as typeof fetch,
   });
   expect(status).toMatchObject({
     deviceName: "desktop-status",
@@ -268,7 +268,6 @@ test("status inspection reports reachability and credential presence without ret
     startupEnabled: false,
     serverReachable: true,
     serverStatus: "ok",
-    serverStorageStatus: "ok",
   });
   expect(JSON.stringify(status)).not.toContain(secret);
 });

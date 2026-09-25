@@ -19,7 +19,7 @@ import { TerminalManager } from "./terminal/manager";
 function connectionHint(error: string | undefined): string | undefined {
   if (!error) return undefined;
   if (error.includes("INVALID_DEVICE_CREDENTIAL")) return 'Credencial inválida ou revogada. Execute "lithium-client.exe relink".';
-  if (error.includes("Handshake timeout") || error.includes("WebSocket transport error")) return "Verifique rede, DNS/TLS e se o Lithium Server está acessível.";
+  if (error.includes("Handshake timeout") || error.includes("WebSocket transport error")) return "Verifique rede, DNS/TLS e se o endpoint Lithium está acessível.";
   return error;
 }
 
@@ -41,7 +41,7 @@ function printConnectionState(snapshot: DeviceClientSnapshot, background: boolea
     return;
   }
   if (snapshot.state === "handshaking") {
-    console.log("Autenticando este device no Lithium Server...");
+    console.log("Autenticando este device no Lithium...");
     return;
   }
   if (snapshot.state === "retrying") {
@@ -49,7 +49,7 @@ function printConnectionState(snapshot: DeviceClientSnapshot, background: boolea
     console.log(`[!] Reconectando (tentativa ${snapshot.attempt})${hint ? ` — ${hint}` : "..."}`);
     return;
   }
-  if (snapshot.state === "connecting") console.log("Conectando ao Lithium Server...");
+  if (snapshot.state === "connecting") console.log("Conectando ao Lithium...");
 }
 
 async function main(): Promise<void> {
@@ -114,7 +114,7 @@ async function main(): Promise<void> {
 
   if (!background) {
     console.log("");
-    console.log(`  Server: ${new URL(config.serverUrl).origin}`);
+    console.log(`  Endpoint: ${new URL(config.serverUrl).origin}`);
     console.log(`  Device: ${clientHostname}`);
     console.log(`  Config: ${configPath}`);
     console.log(`  Workspaces: ${config.workspaceRoots.join(", ")}`);

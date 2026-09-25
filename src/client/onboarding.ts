@@ -162,7 +162,7 @@ export async function enrollDeviceWithAccount(options: {
     }
     return issued.body.secret;
   } finally {
-    // The web session only exists to enroll the device. Revocation is best-effort;
+    // The temporary account session exists only to enroll the device. Revocation is best-effort;
     // the long-lived Client authentication is the separate ldev_ credential.
     try {
       await fetchImpl(endpoint(base, "/server/api/auth/logout"), { method: "POST", headers: sessionHeaders });

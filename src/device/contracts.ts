@@ -23,9 +23,9 @@ export const DEVICE_CAPABILITIES = [
 export type DeviceCapabilityName = (typeof DEVICE_CAPABILITIES)[number];
 
 /**
- * Transport-neutral envelope for a future Lithium Client request.
- * Business context such as boardId/taskId/reason intentionally does not live
- * in `arguments`; the server may correlate that metadata outside this contract.
+ * Transport-neutral capability request.
+ * Controller metadata is intentionally outside `arguments` and is not part of
+ * the local execution contract.
  */
 export interface DeviceCapabilityRequest {
   id: string;

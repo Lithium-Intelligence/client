@@ -71,7 +71,7 @@ describe("Lithium Linux Node config and credential storage", () => {
         .rejects.toThrow("0600");
     }
 
-    await expect(saveLithiumLinuxNodeCredential("lmcp_not-a-device-credential-123456", path))
+    await expect(saveLithiumLinuxNodeCredential("not-a-device-credential", path))
       .rejects.toThrow("device credential");
   });
 

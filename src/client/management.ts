@@ -34,7 +34,6 @@ export interface ClientInstallStatus {
   startupEnabled: boolean;
   serverReachable: boolean;
   serverStatus?: string;
-  serverStorageStatus?: string;
   error?: string;
 }
 
@@ -48,7 +47,7 @@ function httpBase(serverUrl: string): URL {
   return url;
 }
 
-async function fetchHealth(serverUrl: string, fetchImpl: FetchLike): Promise<{ reachable: boolean; status?: string; storageStatus?: string; error?: string }> {
+async function fetchHealth(serverUrl: string, fetchImpl: FetchLike): Promise<{ reachable: boolean; status?: string; error?: string }> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5_000);
@@ -56,11 +55,10 @@ async function fetchHealth(serverUrl: string, fetchImpl: FetchLike): Promise<{ r
     try {
       const response = await fetchImpl(new URL("/health", httpBase(serverUrl)), { signal: controller.signal });
       if (!response.ok) return { reachable: false, error: `HTTP ${response.status}` };
-      const body = await response.json() as { status?: unknown; storage?: { status?: unknown } };
+      const body = await response.json() as { status?: unknown };
       return {
         reachable: true,
         ...(typeof body.status === "string" ? { status: body.status } : {}),
-        ...(typeof body.storage?.status === "string" ? { storageStatus: body.storage.status } : {}),
       };
     } finally {
       clearTimeout(timer);
@@ -108,7 +106,6 @@ export async function inspectClientInstallation(options: {
     startupEnabled,
     serverReachable: health.reachable,
     ...(health.status ? { serverStatus: health.status } : {}),
-    ...(health.storageStatus ? { serverStorageStatus: health.storageStatus } : {}),
     ...(credentialError ? { error: credentialError } : !health.reachable && health.error ? { error: health.error } : {}),
   };
 }
@@ -209,7 +206,7 @@ async function configureInteractively(configPath: string): Promise<void> {
   const current = readLithiumClientConfigFile(configPath);
   const readline = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
   try {
-    const serverUrl = (await readline.question(`Servidor [${current.serverUrl}]: `)).trim() || current.serverUrl;
+    const serverUrl = (await readline.question(`Endpoint [${current.serverUrl}]: `)).trim() || current.serverUrl;
     const deviceAnswer = (await readline.question(`Nome do device [${current.deviceName ?? hostname()}] ("auto" usa hostname): `)).trim();
     const deviceName = deviceAnswer.toLowerCase() === "auto" ? null : (deviceAnswer || current.deviceName || hostname());
     const workspaceAnswer = (await readline.question(`Workspaces separados por ; [${current.workspaceRoots.join(";")}]: `)).trim();
@@ -235,7 +232,7 @@ async function configureInteractively(configPath: string): Promise<void> {
 }
 
 function printHelp(): void {
-  console.log(`Lithium Client\n\nUso:\n  lithium-client.exe                 Conecta ao Server; no primeiro boot pede login.\n  lithium-client.exe status          Mostra configuração, reachability e vínculo sem exibir segredos.\n  lithium-client.exe configure       Wizard de configuração local.\n  lithium-client.exe relink          Revoga a ldev atual e entra com outra conta/device.\n  lithium-client.exe logout          Revoga a ldev no Server e apaga a cópia DPAPI local.\n  lithium-client.exe logout --local-only  Apaga só a cópia local; use apenas se o Server antigo não existe mais.\n  lithium-client.exe startup status  Mostra se inicia com Windows.\n  lithium-client.exe startup enable  Adiciona o standalone ao HKCU Run.\n  lithium-client.exe startup disable Remove o início automático.\n  lithium-client.exe help            Mostra esta ajuda.\n\nAuto-update não faz parte desta versão.`);
+  console.log(`Lithium Client\n\nUso:\n  lithium-client.exe                 Conecta ao endpoint Lithium; no primeiro boot pede login.\n  lithium-client.exe status          Mostra configuração, conectividade e vínculo sem exibir segredos.\n  lithium-client.exe configure       Wizard de configuração local.\n  lithium-client.exe relink          Revoga a credencial atual e entra com outra conta/device.\n  lithium-client.exe logout          Revoga a credencial remota e apaga a cópia DPAPI local.\n  lithium-client.exe logout --local-only  Apaga só a cópia local; use apenas se o endpoint antigo não existe mais.\n  lithium-client.exe startup status  Mostra se inicia com Windows.\n  lithium-client.exe startup enable  Adiciona o standalone ao HKCU Run.\n  lithium-client.exe startup disable Remove o início automático.\n  lithium-client.exe help            Mostra esta ajuda.\n\nAuto-update não faz parte desta versão.`);
 }
 
 export async function runClientManagementCommand(options: {
@@ -252,12 +249,11 @@ export async function runClientManagementCommand(options: {
   if (command === "status") {
     const status = await inspectClientInstallation({ configPath: options.configPath });
     console.log("Lithium Client status");
-    console.log(`  Server: ${status.serverUrl} (${status.serverReachable ? status.serverStatus ?? "online" : "indisponível"})`);
+    console.log(`  Endpoint: ${status.serverUrl} (${status.serverReachable ? status.serverStatus ?? "online" : "indisponível"})`);
     console.log(`  Device: ${status.deviceName}`);
     console.log(`  Credencial DPAPI: ${status.credentialPresent ? "presente" : "ausente"}`);
     console.log(`  Iniciar com Windows: ${status.startupEnabled ? "sim" : "não"}`);
     console.log(`  Workspaces: ${status.workspaceRoots.join(", ")}`);
-    if (status.serverStorageStatus) console.log(`  Storage do Server: ${status.serverStorageStatus}`);
     if (status.error) console.log(`  Atenção: ${status.error}`);
     return true;
   }
@@ -269,8 +265,8 @@ export async function runClientManagementCommand(options: {
     const localOnly = [subcommandRaw, ...rest].some((value) => value === "--local-only");
     const result = await unlinkClientInstallation({ configPath: options.configPath, localOnly });
     if (!result.hadCredential) console.log("Este Windows já está sem credencial de device.");
-    else if (localOnly) console.log("Credencial local removida sem revogação remota. A credencial antiga pode continuar válida no Server.");
-    else console.log("Device desvinculado: credencial revogada no Server e removida do DPAPI local.");
+    else if (localOnly) console.log("Credencial local removida sem revogação remota. A credencial antiga pode continuar válida no endpoint.");
+    else console.log("Device desvinculado: credencial remota revogada e cópia DPAPI local removida.");
     return true;
   }
   if (command === "relink" || command === "login") {

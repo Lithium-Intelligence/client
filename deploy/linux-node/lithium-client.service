@@ -40,7 +40,6 @@ SystemCallArchitectures=native
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 
 ReadWritePaths=/var/lib/lithium-node /srv/lithium-node/workspaces
-ReadWritePaths=-/srv/projects
 
 [Install]
 WantedBy=multi-user.target

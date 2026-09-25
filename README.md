@@ -1,45 +1,45 @@
 # Lithium Client
 
-Lithium Client connects a Windows or Linux machine to Lithium Intelligence as a
-local execution Node. The central Server remains the authority for identity,
-Projects, Boards, Cards, Workspace routing, authorization and audit; the Client
-only exposes machine-local capabilities inside configured Workspace roots.
+Lithium Client connects a Windows or Linux machine to a Lithium endpoint and
+exposes local execution capabilities only inside explicitly configured
+Workspace roots.
 
-## Supported distribution
+The repository contains the machine-side client only: enrollment, device
+credential storage, connection/reconnect, Workspace announcements, filesystem,
+process and terminal capabilities, local execution policy, packaging and tests.
 
-The initial GitHub release surface is intentionally small and explicit:
+## Releases
+
+Supported release assets:
 
 - **Windows x64** — `lithium-client-windows-x64.exe`
 - **Linux x64** — `lithium-client-linux-x64.tar.gz`
 
-Direct `npx` / `bunx` install commands are not part of the supported release
-contract yet. Source development requires Bun.
+Source development requires Bun. Direct `npx` / `bunx` installation is not a
+supported distribution path yet.
 
-## Security model
+## Security defaults
 
-Defaults are fail-closed:
+The default policy is fail-closed:
 
-- Workspace roots are explicit.
+- Workspace roots must be configured explicitly.
 - Executables are allowlisted.
-- Full child environment forwarding is disabled.
+- Full child-environment forwarding is disabled.
 - Unsafe shell is disabled.
-- Server credentials are not stored in config.
-- Windows stores the device credential with DPAPI CurrentUser.
-- Linux stores the device credential in a private 0600 file.
+- Account passwords are used only during interactive enrollment.
+- Device credentials are never stored in the JSON config.
+- Windows protects the device credential with DPAPI CurrentUser.
+- Linux stores the device credential in a private mode-0600 file.
 
-The default Server endpoint is `https://ai.lithium.dev.br`, but it can be
-changed in the local config.
+The default endpoint is `https://ai.lithium.dev.br` and can be changed in the
+local config.
 
 ## Windows
 
-Download `lithium-client-windows-x64.exe` from the latest GitHub release and
-run it in a terminal.
+Download `lithium-client-windows-x64.exe` and run it in a terminal.
 
-On first interactive run it asks for your Lithium account credentials, registers
-or reuses the computer, receives a device credential and stores only that
-credential through DPAPI.
-
-Useful commands:
+On first interactive run the Client enrolls the machine and stores only the
+issued device credential.
 
 ```text
 lithium-client-windows-x64.exe
@@ -56,23 +56,24 @@ A local `lithium-client.json` is created next to the executable when missing.
 
 ## Linux
 
-The Linux release contains a headless `lithium-node` executable plus:
+The Linux archive contains:
 
+- `lithium-node`
 - `lithium-node.example.json`
 - `lithium-client.service`
 - `README-LINUX.md`
 
-The recommended system paths are:
+Recommended paths:
 
 - executable: `/opt/lithium-client/lithium-node`
 - config: `/etc/lithium-node/config.json`
 - credential: `/var/lib/lithium-node/device-credential`
 - service user: `lithium-node`
 
-See `README-LINUX.md` inside the release archive for enrollment, systemd and
+See `README-LINUX.md` in the release archive for enrollment, systemd and
 Workspace hardening.
 
-## Local development
+## Development
 
 ```bash
 bun install
@@ -81,13 +82,13 @@ bun test
 bun run typecheck
 ```
 
-Run the Windows source client:
+Run the Windows entrypoint from source:
 
 ```bash
 bun src/client-entry.ts
 ```
 
-Run the Linux source entrypoint on Linux:
+Run the Linux entrypoint on Linux:
 
 ```bash
 bun src/linux-node-entry.ts status
@@ -97,48 +98,33 @@ bun src/linux-node-entry.ts run
 
 ## Build
 
-Windows:
-
 ```bash
 bun run build:windows
-```
-
-Linux:
-
-```bash
 bun run build:linux
-```
-
-Release checksums:
-
-```bash
 bun run checksums
 ```
 
-Release output is written to `dist/`.
+Release artifacts are written to `dist/`.
 
 ## Configuration
 
-Start from `lithium-client.example.json` on Windows or
-`deploy/linux-node/lithium-node.example.json` on Linux.
+Windows starts from `lithium-client.example.json`.
 
-The config contains only Server endpoint and local machine policy. Never put an
-account password, `ldev_...`, MCP token, API key or signed URL into config.
+Linux starts from `deploy/linux-node/lithium-node.example.json`.
 
-## Repository boundary
+Configuration contains only endpoint and local execution policy. Do not put an
+account password, device credential, API key, signed URL or private key in a
+config file.
 
-This repository intentionally excludes:
+## Repository scope
 
-- Lithium Server implementation
-- web/admin UI
-- Project/Board/Card services
-- server databases and backups
-- TaskManager / internal agent boards
-- production credentials
+Keep this repository machine-local. Runtime source belongs to the Client,
+device protocol, terminal/process execution and OS-specific credential/storage
+helpers. Central application code, databases, deployment state and operator
+credentials do not belong here.
 
 See `SECURITY.md` and `CONTRIBUTING.md`.
 
 ## License
 
-No open-source license has been granted yet. See `LICENSE.md`. Decide the
-intended license before making the repository public.
+No open-source license has been granted yet. See `LICENSE.md`.

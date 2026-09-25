@@ -41,12 +41,7 @@ export const callContextSchema = z.object({
   correlationId: identifierSchema,
   accountId: identifierSchema.optional(),
   deviceId: identifierSchema.optional(),
-  workspaceId: identifierSchema.optional(),
-  actorId: identifierSchema.optional(),
-  boardId: identifierSchema.optional(),
-  taskId: identifierSchema.optional(),
-  reason: z.string().min(1).max(500).optional(),
-}).strict();
+}).passthrough();
 
 export const helloMessageSchema = z.object({
   type: z.literal("hello"),
