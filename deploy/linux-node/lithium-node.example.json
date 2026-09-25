@@ -1,0 +1,34 @@
+{
+  "serverUrl": "https://ai.lithium.dev.br",
+  "clientVersion": "0.1.0",
+  "deviceName": "lithium-vps-node",
+  "workspaceRoots": [
+    "/srv/lithium-node/workspaces",
+    "/srv/projects"
+  ],
+  "defaultTimeoutMs": 15000,
+  "maxTimeoutMs": 120000,
+  "maxOutputBytes": 500000,
+  "maxFileBytes": 5000000,
+  "maxImageBytes": 20000000,
+  "maxImagePixels": 100000000,
+  "maxListEntries": 1000,
+  "maxTerminals": 10,
+  "maxTerminalLogBytes": 4000000,
+  "terminalStopGraceMs": 3000,
+  "terminalHistoryLimit": 50,
+  "allowedExecutables": [
+    "bun",
+    "node",
+    "python3",
+    "git"
+  ],
+  "allowAllExecutables": false,
+  "childEnvVars": [
+    "PATH",
+    "HOME",
+    "TMPDIR"
+  ],
+  "allowAllChildEnv": false,
+  "enableUnsafeShell": false
+}

@@ -1,0 +1,20 @@
+node_modules/
+.bun-cache/
+dist/
+.env
+.env.*
+!.env.example
+
+# Local client configuration and credentials
+lithium-client.json
+lithium-node.json
+.lithium-node-device-credential
+device-credential*
+*.credential
+
+# Local QA / build artifacts
+.tmp-*
+coverage/
+*.log
+.DS_Store
+Thumbs.db

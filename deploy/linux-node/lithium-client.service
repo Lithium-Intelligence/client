@@ -1,0 +1,46 @@
+[Unit]
+Description=Lithium Client headless Linux Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lithium-node
+Group=lithium-node
+WorkingDirectory=/opt/lithium-client
+UMask=0077
+
+Environment=LITHIUM_NODE_CONFIG_FILE=/etc/lithium-node/config.json
+Environment=LITHIUM_NODE_CREDENTIAL_FILE=/var/lib/lithium-node/device-credential
+Environment=HOME=/var/lib/lithium-node
+
+ExecStart=/opt/lithium-client/lithium-node run
+Restart=on-failure
+RestartSec=3
+
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+ReadWritePaths=/var/lib/lithium-node /srv/lithium-node/workspaces
+ReadWritePaths=-/srv/projects
+
+[Install]
+WantedBy=multi-user.target

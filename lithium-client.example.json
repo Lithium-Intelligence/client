@@ -1,0 +1,30 @@
+{
+  "serverUrl": "https://ai.lithium.dev.br",
+  "clientVersion": "0.1.0",
+  "workspaceRoots": [
+    "./workspace"
+  ],
+  "defaultTimeoutMs": 15000,
+  "maxTimeoutMs": 60000,
+  "maxOutputBytes": 200000,
+  "maxFileBytes": 1000000,
+  "maxImageBytes": 20000000,
+  "maxImagePixels": 100000000,
+  "maxListEntries": 500,
+  "maxTerminals": 10,
+  "maxTerminalLogBytes": 2000000,
+  "terminalStopGraceMs": 3000,
+  "terminalHistoryLimit": 50,
+  "allowedExecutables": [
+    "bun",
+    "node",
+    "python3",
+    "python",
+    "go",
+    "git"
+  ],
+  "allowAllExecutables": false,
+  "childEnvVars": [],
+  "allowAllChildEnv": false,
+  "enableUnsafeShell": false
+}
