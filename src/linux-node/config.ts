@@ -30,7 +30,7 @@ export function loadLithiumLinuxNodeConfig(
 export async function assertLithiumLinuxNodeWorkspaces(config: LithiumLinuxNodeConfig): Promise<void> {
   for (const root of config.workspaceRoots) {
     const info = await stat(root);
-    if (!info.isDirectory()) throw new Error(`Linux Node workspace root não é diretório: ${root}`);
+    if (!info.isDirectory()) throw new Error(`Linux Node workspace root is not a directory: ${root}`);
     await access(root);
   }
 }

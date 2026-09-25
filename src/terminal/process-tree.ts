@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 export async function terminateProcessTree(rootPid: number, force: boolean): Promise<boolean> {
   if (!Number.isInteger(rootPid) || rootPid <= 0) {
-    throw new Error(`PID inválido para encerramento de árvore: ${rootPid}.`);
+    throw new Error(`Invalid PID for process-tree termination: ${rootPid}.`);
   }
 
   if (process.platform !== "win32") return false;

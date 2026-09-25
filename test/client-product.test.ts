@@ -120,7 +120,7 @@ test("device credential can be acquired interactively once and then reused from 
     codec: testCodec,
     acquireCredential: async () => {
       acquisitions += 1;
-      throw new Error("não deveria pedir novamente");
+      throw new Error("should not ask again");
     },
   })).toBe(secret);
   expect(acquisitions).toBe(1);
@@ -182,7 +182,7 @@ test("first-run account enrollment creates a device credential and revokes the t
 test("device credential validation rejects non-device secrets before persistence", async () => {
   const root = await mkdtemp(join(tmpdir(), "lithium-client-credential-"));
   roots.push(root);
-  await expect(saveDeviceCredential("not-a-device-token", join(root, "credential.bin"), testCodec)).rejects.toThrow("inválida");
+  await expect(saveDeviceCredential("not-a-device-token", join(root, "credential.bin"), testCodec)).rejects.toThrow("Invalid device credential");
 });
 
 test("Lithium Client entrypoint composes only local runtime modules", async () => {

@@ -28,7 +28,7 @@ export class TerminalManager {
     this.pruneHistory();
     const activeCount = [...this.sessions.values()].filter((session) => session.active).length;
     if (activeCount >= this.config.maxTerminals) {
-      throw new Error(`Limite de terminais ativos atingido: ${this.config.maxTerminals}.`);
+      throw new Error(`Active terminal limit reached: ${this.config.maxTerminals}.`);
     }
 
     const id = `term_${randomUUID()}`;
@@ -79,7 +79,7 @@ export class TerminalManager {
 
   private requireSession(id: string): TerminalSession {
     const session = this.sessions.get(id);
-    if (!session) throw new Error(`Terminal não encontrado: ${id}.`);
+    if (!session) throw new Error(`Terminal not found: ${id}.`);
     return session;
   }
 

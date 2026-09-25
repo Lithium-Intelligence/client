@@ -42,7 +42,7 @@ export class TerminalLogBuffer {
 
   constructor(readonly maxBytes: number) {
     if (!Number.isInteger(maxBytes) || maxBytes < 1) {
-      throw new Error("TerminalLogBuffer maxBytes deve ser um inteiro positivo.");
+      throw new Error("TerminalLogBuffer maxBytes must be a positive integer.");
     }
   }
 
@@ -85,10 +85,10 @@ export class TerminalLogBuffer {
     const limit = options.limit ?? 200;
 
     if (!Number.isInteger(after) || after < 0) {
-      throw new Error("after deve ser um inteiro não negativo.");
+      throw new Error("after must be a non-negative integer.");
     }
     if (!Number.isInteger(limit) || limit < 1) {
-      throw new Error("limit deve ser um inteiro positivo.");
+      throw new Error("limit must be a positive integer.");
     }
 
     const entries: TerminalLogEntry[] = [];

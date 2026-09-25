@@ -31,7 +31,7 @@ function parseRangeCount(raw: string | undefined): number {
 }
 
 export function applyUnifiedPatch(original: string, patch: string): AppliedPatch {
-  if (!patch.trim()) throw new Error("Patch vazio.");
+  if (!patch.trim()) throw new Error("Patch is empty.");
 
   const source = splitText(original);
   const patchLines = patch.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
@@ -50,14 +50,14 @@ export function applyUnifiedPatch(original: string, patch: string): AppliedPatch
     }
 
     const header = line.match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?:.*)$/);
-    if (!header) throw new Error(`Linha de patch inválida fora de hunk: ${line}`);
+    if (!header) throw new Error(`Invalid patch line outside a hunk: ${line}`);
 
     const oldStart = Number.parseInt(header[1]!, 10);
     const oldCount = parseRangeCount(header[2]);
     const newCount = parseRangeCount(header[4]);
     const targetIndex = oldStart === 0 ? 0 : oldStart - 1;
     if (targetIndex < sourceIndex || targetIndex > source.lines.length) {
-      throw new Error(`Hunk fora de ordem ou fora do arquivo em -${oldStart},${oldCount}.`);
+      throw new Error(`Hunk is out of order or outside the file at -${oldStart},${oldCount}.`);
     }
 
     output.push(...source.lines.slice(sourceIndex, targetIndex));
@@ -71,7 +71,7 @@ export function applyUnifiedPatch(original: string, patch: string): AppliedPatch
     while (patchIndex < patchLines.length && !patchLines[patchIndex]!.startsWith("@@ ")) {
       const patchLine = patchLines[patchIndex]!;
       if (patchLine.startsWith("--- ") || patchLine.startsWith("+++ ") || patchLine.startsWith("diff ") || patchLine.startsWith("index ")) {
-        throw new Error("Patch com múltiplos arquivos não é suportado; informe um único path por chamada.");
+        throw new Error("Multi-file patches are not supported; provide a single path per call.");
       }
       if (patchLine === "\\ No newline at end of file") {
         patchIndex += 1;
@@ -86,7 +86,7 @@ export function applyUnifiedPatch(original: string, patch: string): AppliedPatch
       const text = patchLine.slice(1);
       if (marker === " ") {
         if (source.lines[sourceIndex] !== text) {
-          throw new Error(`Contexto do patch não confere na linha ${sourceIndex + 1}.`);
+          throw new Error(`Patch context does not match at line ${sourceIndex + 1}.`);
         }
         output.push(text);
         sourceIndex += 1;
@@ -94,7 +94,7 @@ export function applyUnifiedPatch(original: string, patch: string): AppliedPatch
         producedNew += 1;
       } else if (marker === "-") {
         if (source.lines[sourceIndex] !== text) {
-          throw new Error(`Linha removida pelo patch não confere na linha ${sourceIndex + 1}.`);
+          throw new Error(`Patch removal does not match at line ${sourceIndex + 1}.`);
         }
         sourceIndex += 1;
         consumedOld += 1;
@@ -104,19 +104,19 @@ export function applyUnifiedPatch(original: string, patch: string): AppliedPatch
         producedNew += 1;
         additions += 1;
       } else {
-        throw new Error(`Prefixo inválido em linha de hunk: ${patchLine}`);
+        throw new Error(`Invalid prefix in hunk line: ${patchLine}`);
       }
       patchIndex += 1;
     }
 
     if (consumedOld !== oldCount || producedNew !== newCount) {
       throw new Error(
-        `Contagem do hunk divergente: esperado -${oldCount}/+${newCount}, observado -${consumedOld}/+${producedNew}.`,
+        `Hunk count mismatch: expected -${oldCount}/+${newCount}, observed -${consumedOld}/+${producedNew}.`,
       );
     }
   }
 
-  if (hunks === 0) throw new Error("Nenhum hunk @@ encontrado no patch.");
+  if (hunks === 0) throw new Error("No @@ hunk found in patch.");
   output.push(...source.lines.slice(sourceIndex));
 
   return {
@@ -133,14 +133,14 @@ export function replaceExactOccurrences(
   newText: string,
   expectedOccurrences = 1,
 ): { content: string; replacements: number } {
-  if (!oldText) throw new Error("oldText não pode ser vazio.");
+  if (!oldText) throw new Error("oldText cannot be empty.");
   if (!Number.isInteger(expectedOccurrences) || expectedOccurrences < 1) {
-    throw new Error("expectedOccurrences deve ser um inteiro positivo.");
+    throw new Error("expectedOccurrences must be a positive integer.");
   }
 
   const replacements = original.split(oldText).length - 1;
   if (replacements !== expectedOccurrences) {
-    throw new Error(`Esperadas ${expectedOccurrences} ocorrência(s) de oldText, encontradas ${replacements}.`);
+    throw new Error(`Expected ${expectedOccurrences} occurrence(s) of oldText, found ${replacements}.`);
   }
 
   return { content: original.split(oldText).join(newText), replacements };

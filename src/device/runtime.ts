@@ -147,7 +147,7 @@ export class DeviceRuntime {
     await assertRegularFile(absolute);
     const info = await stat(absolute);
     const limit = Math.min(options.maxBytes ?? this.config.maxFileBytes, this.config.maxFileBytes);
-    if (info.size > limit) throw new Error(`Arquivo com ${info.size} bytes excede o limite de ${limit}.`);
+    if (info.size > limit) throw new Error(`File with ${info.size} bytes exceeds the limit of ${limit}.`);
     return { path: options.path, size: info.size, content: await Bun.file(absolute).text() };
   }
 
@@ -157,7 +157,7 @@ export class DeviceRuntime {
     const workspaceRoot = await workspaceRootForPath(this.config.workspaceRoots, absolute);
     const info = await stat(absolute);
     const limit = Math.min(options.maxBytes ?? this.config.maxImageBytes, this.config.maxImageBytes);
-    if (info.size > limit) throw new Error(`Imagem com ${info.size} bytes excede o limite de ${limit}.`);
+    if (info.size > limit) throw new Error(`Image with ${info.size} bytes exceeds the limit of ${limit}.`);
 
     const bytes = new Uint8Array(await Bun.file(absolute).arrayBuffer());
     const metadata = imageMetadata(bytes);
@@ -206,7 +206,7 @@ export class DeviceRuntime {
     const overwrite = options.overwrite ?? false;
     const bytes = textBytes(options.content);
     if (bytes > this.config.maxFileBytes) {
-      throw new Error(`Conteúdo com ${bytes} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`Content with ${bytes} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     const absolute = await resolveWorkspacePath(this.config.workspaceRoots, options.path, { allowMissing: true });
     await mkdir(dirname(absolute), { recursive: true });
@@ -219,13 +219,13 @@ export class DeviceRuntime {
     await assertRegularFile(absolute);
     const info = await stat(absolute);
     if (info.size > this.config.maxFileBytes) {
-      throw new Error(`Arquivo com ${info.size} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`File with ${info.size} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     const original = await Bun.file(absolute).text();
     const edited = replaceExactOccurrences(original, options.oldText, options.newText, options.expectedOccurrences ?? 1);
     const bytes = textBytes(edited.content);
     if (bytes > this.config.maxFileBytes) {
-      throw new Error(`Resultado com ${bytes} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`Result with ${bytes} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     await writeFile(absolute, edited.content, { encoding: "utf8", flag: "w" });
     return { path: options.path, bytes, replacements: edited.replacements };
@@ -234,18 +234,18 @@ export class DeviceRuntime {
   async applyPatch(options: { path: string; patch: string }) {
     const patchBytes = textBytes(options.patch);
     if (patchBytes > this.config.maxFileBytes) {
-      throw new Error(`Patch com ${patchBytes} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`Patch with ${patchBytes} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     const absolute = await resolveWorkspacePath(this.config.workspaceRoots, options.path);
     await assertRegularFile(absolute);
     const info = await stat(absolute);
     if (info.size > this.config.maxFileBytes) {
-      throw new Error(`Arquivo com ${info.size} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`File with ${info.size} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     const applied = applyUnifiedPatch(await Bun.file(absolute).text(), options.patch);
     const bytes = textBytes(applied.content);
     if (bytes > this.config.maxFileBytes) {
-      throw new Error(`Resultado com ${bytes} bytes excede o limite de ${this.config.maxFileBytes}.`);
+      throw new Error(`Result with ${bytes} bytes exceeds the limit of ${this.config.maxFileBytes}.`);
     }
     await writeFile(absolute, applied.content, { encoding: "utf8", flag: "w" });
     return {
@@ -313,11 +313,11 @@ export class DeviceRuntime {
     const sourceAbsolute = await resolveWorkspacePath(this.config.workspaceRoots, options.source);
     await assertRegularFile(sourceAbsolute);
     const destinationAbsolute = await resolveWorkspacePath(this.config.workspaceRoots, options.destination, { allowMissing: true });
-    if (sourceAbsolute === destinationAbsolute) throw new Error("Origem e destino apontam para o mesmo arquivo.");
+    if (sourceAbsolute === destinationAbsolute) throw new Error("Source and destination point to the same file.");
 
     const destinationExists = await pathExists(destinationAbsolute);
     if (destinationExists) {
-      if (!overwrite) throw new Error("O arquivo de destino já existe; use overwrite=true para substituí-lo.");
+      if (!overwrite) throw new Error("The destination file already exists; use overwrite=true to replace it.");
       await assertRegularFile(destinationAbsolute);
     }
     if (createParents) await mkdir(dirname(destinationAbsolute), { recursive: true });
@@ -392,7 +392,7 @@ export class DeviceRuntime {
   private assertImagePixels(width: number, height: number): void {
     const pixels = width * height;
     if (!Number.isSafeInteger(pixels) || pixels > this.config.maxImagePixels) {
-      throw new Error(`Imagem com ${width} × ${height} pixels excede o limite de ${this.config.maxImagePixels} pixels.`);
+      throw new Error(`Image with ${width} × ${height} pixels exceeds the limit of ${this.config.maxImagePixels} pixels.`);
     }
   }
 }

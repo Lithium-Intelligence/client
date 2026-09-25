@@ -179,14 +179,14 @@ export async function relinkClientInstallation(options: {
 }
 
 function requireInteractiveTerminal(): void {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error("Este comando requer terminal interativo.");
+  if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error("This command requires an interactive terminal.");
 }
 
 async function promptDeviceName(current: string): Promise<string> {
   requireInteractiveTerminal();
   const readline = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
   try {
-    const value = (await readline.question(`Nome deste computador [${current}]: `)).trim();
+    const value = (await readline.question(`Computer name [${current}]: `)).trim();
     return value || current;
   } finally {
     readline.close();
@@ -196,9 +196,9 @@ async function promptDeviceName(current: string): Promise<string> {
 function parseBooleanAnswer(value: string, current: boolean): boolean {
   const answer = value.trim().toLowerCase();
   if (!answer) return current;
-  if (["s", "sim", "y", "yes", "1", "true"].includes(answer)) return true;
-  if (["n", "nao", "não", "no", "0", "false"].includes(answer)) return false;
-  throw new Error(`Resposta booleana inválida: ${value}`);
+  if (["y", "yes", "1", "true"].includes(answer)) return true;
+  if (["n", "no", "0", "false"].includes(answer)) return false;
+  throw new Error(`Invalid boolean answer: ${value}`);
 }
 
 async function configureInteractively(configPath: string): Promise<void> {
@@ -207,15 +207,15 @@ async function configureInteractively(configPath: string): Promise<void> {
   const readline = createInterface({ input: process.stdin, output: process.stdout, terminal: true });
   try {
     const serverUrl = (await readline.question(`Endpoint [${current.serverUrl}]: `)).trim() || current.serverUrl;
-    const deviceAnswer = (await readline.question(`Nome do device [${current.deviceName ?? hostname()}] ("auto" usa hostname): `)).trim();
+    const deviceAnswer = (await readline.question(`Device name [${current.deviceName ?? hostname()}] ("auto" uses the hostname): `)).trim();
     const deviceName = deviceAnswer.toLowerCase() === "auto" ? null : (deviceAnswer || current.deviceName || hostname());
-    const workspaceAnswer = (await readline.question(`Workspaces separados por ; [${current.workspaceRoots.join(";")}]: `)).trim();
+    const workspaceAnswer = (await readline.question(`Workspaces separated by ; [${current.workspaceRoots.join(";")}]: `)).trim();
     const workspaceRoots = workspaceAnswer ? workspaceAnswer.split(";").map((value) => value.trim()).filter(Boolean) : current.workspaceRoots;
-    const executableAnswer = (await readline.question(`Executáveis permitidos separados por , [${current.allowedExecutables.join(",")}]: `)).trim();
+    const executableAnswer = (await readline.question(`Allowed executables separated by , [${current.allowedExecutables.join(",")}]: `)).trim();
     const allowedExecutables = executableAnswer ? executableAnswer.split(",").map((value) => value.trim()).filter(Boolean) : current.allowedExecutables;
-    const allowAllExecutables = parseBooleanAnswer(await readline.question(`Permitir qualquer executável? [${current.allowAllExecutables ? "S/n" : "s/N"}]: `), current.allowAllExecutables);
-    const allowAllChildEnv = parseBooleanAnswer(await readline.question(`Repassar todo o ambiente para processos filhos? [${current.allowAllChildEnv ? "S/n" : "s/N"}]: `), current.allowAllChildEnv);
-    const enableUnsafeShell = parseBooleanAnswer(await readline.question(`Habilitar shell irrestrito? [${current.enableUnsafeShell ? "S/n" : "s/N"}]: `), current.enableUnsafeShell);
+    const allowAllExecutables = parseBooleanAnswer(await readline.question(`Allow any executable? [${current.allowAllExecutables ? "Y/n" : "y/N"}]: `), current.allowAllExecutables);
+    const allowAllChildEnv = parseBooleanAnswer(await readline.question(`Forward the full environment to child processes? [${current.allowAllChildEnv ? "Y/n" : "y/N"}]: `), current.allowAllChildEnv);
+    const enableUnsafeShell = parseBooleanAnswer(await readline.question(`Enable unrestricted shell? [${current.enableUnsafeShell ? "Y/n" : "y/N"}]: `), current.enableUnsafeShell);
     updateLithiumClientConfigFile(configPath, {
       serverUrl,
       deviceName,
@@ -225,14 +225,14 @@ async function configureInteractively(configPath: string): Promise<void> {
       allowAllChildEnv,
       enableUnsafeShell,
     });
-    console.log(`Configuração salva: ${configPath}`);
+    console.log(`Configuration saved: ${configPath}`);
   } finally {
     readline.close();
   }
 }
 
 function printHelp(): void {
-  console.log(`Lithium Client\n\nUso:\n  lithium-client.exe                 Conecta ao endpoint Lithium; no primeiro boot pede login.\n  lithium-client.exe status          Mostra configuração, conectividade e vínculo sem exibir segredos.\n  lithium-client.exe configure       Wizard de configuração local.\n  lithium-client.exe relink          Revoga a credencial atual e entra com outra conta/device.\n  lithium-client.exe logout          Revoga a credencial remota e apaga a cópia DPAPI local.\n  lithium-client.exe logout --local-only  Apaga só a cópia local; use apenas se o endpoint antigo não existe mais.\n  lithium-client.exe startup status  Mostra se inicia com Windows.\n  lithium-client.exe startup enable  Adiciona o standalone ao HKCU Run.\n  lithium-client.exe startup disable Remove o início automático.\n  lithium-client.exe help            Mostra esta ajuda.\n\nAuto-update não faz parte desta versão.`);
+  console.log(`Lithium Client\n\nUsage:\n  lithium-client.exe                 Connects to the Lithium endpoint; first run prompts for sign-in.\n  lithium-client.exe status          Shows configuration, connectivity, and enrollment without exposing secrets.\n  lithium-client.exe configure       Local configuration wizard.\n  lithium-client.exe relink          Revokes the current credential and enrolls with another account/device.\n  lithium-client.exe logout          Revokes the remote credential and deletes the local DPAPI copy.\n  lithium-client.exe logout --local-only  Deletes only the local copy; use only if the old endpoint no longer exists.\n  lithium-client.exe startup status  Shows whether the Client starts with Windows.\n  lithium-client.exe startup enable  Adds the standalone executable to HKCU Run.\n  lithium-client.exe startup disable Removes automatic startup.\n  lithium-client.exe help            Shows this help.\n\nAuto-update is not included in this version.`);
 }
 
 export async function runClientManagementCommand(options: {
@@ -249,12 +249,12 @@ export async function runClientManagementCommand(options: {
   if (command === "status") {
     const status = await inspectClientInstallation({ configPath: options.configPath });
     console.log("Lithium Client status");
-    console.log(`  Endpoint: ${status.serverUrl} (${status.serverReachable ? status.serverStatus ?? "online" : "indisponível"})`);
+    console.log(`  Endpoint: ${status.serverUrl} (${status.serverReachable ? status.serverStatus ?? "online" : "unavailable"})`);
     console.log(`  Device: ${status.deviceName}`);
-    console.log(`  Credencial DPAPI: ${status.credentialPresent ? "presente" : "ausente"}`);
-    console.log(`  Iniciar com Windows: ${status.startupEnabled ? "sim" : "não"}`);
+    console.log(`  DPAPI credential: ${status.credentialPresent ? "present" : "missing"}`);
+    console.log(`  Start with Windows: ${status.startupEnabled ? "yes" : "no"}`);
     console.log(`  Workspaces: ${status.workspaceRoots.join(", ")}`);
-    if (status.error) console.log(`  Atenção: ${status.error}`);
+    if (status.error) console.log(`  Warning: ${status.error}`);
     return true;
   }
   if (command === "configure" || command === "config") {
@@ -264,9 +264,9 @@ export async function runClientManagementCommand(options: {
   if (command === "logout" || command === "unlink") {
     const localOnly = [subcommandRaw, ...rest].some((value) => value === "--local-only");
     const result = await unlinkClientInstallation({ configPath: options.configPath, localOnly });
-    if (!result.hadCredential) console.log("Este Windows já está sem credencial de device.");
-    else if (localOnly) console.log("Credencial local removida sem revogação remota. A credencial antiga pode continuar válida no endpoint.");
-    else console.log("Device desvinculado: credencial remota revogada e cópia DPAPI local removida.");
+    if (!result.hadCredential) console.log("This Windows installation already has no device credential.");
+    else if (localOnly) console.log("Local credential removed without remote revocation. The old credential may remain valid at the endpoint.");
+    else console.log("Device unlinked: remote credential revoked and local DPAPI copy removed.");
     return true;
   }
   if (command === "relink" || command === "login") {
@@ -279,27 +279,27 @@ export async function runClientManagementCommand(options: {
       password: login.password,
       deviceName,
     });
-    console.log(`${result.replacedCredential ? "Vínculo trocado" : "Vínculo criado"}: ${result.deviceName}. Execute o Client sem argumentos para conectar.`);
+    console.log(`${result.replacedCredential ? "Enrollment replaced" : "Enrollment created"}: ${result.deviceName}. Run the Client without arguments to connect.`);
     return true;
   }
   if (command === "startup") {
     const subcommand = subcommandRaw?.toLowerCase() || "status";
     if (subcommand === "status") {
       const status = await windowsStartupStatus();
-      console.log(`Iniciar com Windows: ${status.enabled ? "sim" : "não"}`);
+      console.log(`Start with Windows: ${status.enabled ? "yes" : "no"}`);
       return true;
     }
     if (subcommand === "enable") {
       await enableWindowsStartup();
-      console.log("Lithium Client configurado para iniciar com o Windows.");
+      console.log("Lithium Client is configured to start with Windows.");
       return true;
     }
     if (subcommand === "disable") {
       const removed = await disableWindowsStartup();
-      console.log(removed ? "Início com Windows removido." : "Início com Windows já estava desabilitado.");
+      console.log(removed ? "Windows startup removed." : "Windows startup was already disabled.");
       return true;
     }
-    throw new Error(`Comando startup desconhecido: ${subcommand}`);
+    throw new Error(`Unknown startup command: ${subcommand}`);
   }
-  throw new Error(`Comando desconhecido: ${command}. Use "help" para ver as opções.`);
+  throw new Error(`Unknown command: ${command}. Use "help" to see the available options.`);
 }

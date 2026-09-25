@@ -19,7 +19,7 @@ const JPEG_SOF_MARKERS = new Set([
 
 function assertRange(bytes: Uint8Array, offset: number, length: number, label: string): void {
   if (offset < 0 || length < 0 || offset + length > bytes.byteLength) {
-    throw new Error(`Imagem truncada ao ler ${label}.`);
+    throw new Error(`Truncated image while reading ${label}.`);
   }
 }
 
@@ -72,18 +72,18 @@ function readUint24LE(bytes: Uint8Array, offset: number): number {
 
 function validateDimensions(width: number, height: number): { width: number; height: number } {
   if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
-    throw new Error(`Dimensões de imagem inválidas: ${width} × ${height}.`);
+    throw new Error(`Invalid image dimensions: ${width} × ${height}.`);
   }
   return { width, height };
 }
 
 function parsePng(bytes: Uint8Array): { mimeType: "image/png"; width: number; height: number } | undefined {
   if (!matches(bytes, 0, PNG_SIGNATURE)) return undefined;
-  assertRange(bytes, 8, 16, "cabeçalho IHDR do PNG");
+  assertRange(bytes, 8, 16, "PNG IHDR header");
   const ihdrLength = readUint32BE(bytes, 8);
   const chunkType = ascii(bytes, 12, 4);
   if (ihdrLength !== 13 || chunkType !== "IHDR") {
-    throw new Error("PNG inválido: o primeiro chunk não é um IHDR de 13 bytes.");
+    throw new Error("Invalid PNG: the first chunk is not a 13-byte IHDR.");
   }
   const { width, height } = validateDimensions(readUint32BE(bytes, 16), readUint32BE(bytes, 20));
   return { mimeType: "image/png", width, height };
@@ -104,11 +104,11 @@ function parseJpeg(bytes: Uint8Array): { mimeType: "image/jpeg"; width: number; 
     if (marker === 0x00 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
 
     const segmentLength = readUint16BE(bytes, offset);
-    if (segmentLength < 2) throw new Error("JPEG inválido: segmento com comprimento menor que 2.");
+    if (segmentLength < 2) throw new Error("Invalid JPEG: segment length is less than 2.");
     assertRange(bytes, offset, segmentLength, "segmento JPEG");
 
     if (JPEG_SOF_MARKERS.has(marker)) {
-      if (segmentLength < 7) throw new Error("JPEG inválido: segmento SOF truncado.");
+      if (segmentLength < 7) throw new Error("Invalid JPEG: truncated SOF segment.");
       const height = readUint16BE(bytes, offset + 3);
       const width = readUint16BE(bytes, offset + 5);
       validateDimensions(width, height);
@@ -118,7 +118,7 @@ function parseJpeg(bytes: Uint8Array): { mimeType: "image/jpeg"; width: number; 
     offset += segmentLength;
   }
 
-  throw new Error("JPEG inválido: nenhum marcador SOF com dimensões foi encontrado.");
+  throw new Error("Invalid JPEG: no SOF marker with dimensions was found.");
 }
 
 function parseWebpChunk(
@@ -131,7 +131,7 @@ function parseWebpChunk(
   assertRange(bytes, dataOffset, chunkSize, `chunk ${chunkType} do WebP`);
 
   if (chunkType === "VP8X") {
-    if (chunkSize < 10) throw new Error("WebP inválido: chunk VP8X truncado.");
+    if (chunkSize < 10) throw new Error("Invalid WebP: truncated VP8X chunk.");
     return validateDimensions(
       readUint24LE(bytes, dataOffset + 4) + 1,
       readUint24LE(bytes, dataOffset + 7) + 1,
@@ -139,9 +139,9 @@ function parseWebpChunk(
   }
 
   if (chunkType === "VP8 ") {
-    if (chunkSize < 10) throw new Error("WebP inválido: chunk VP8 truncado.");
+    if (chunkSize < 10) throw new Error("Invalid WebP: truncated VP8 chunk.");
     if (!matches(bytes, dataOffset + 3, Uint8Array.from([0x9d, 0x01, 0x2a]))) {
-      throw new Error("WebP inválido: assinatura do frame VP8 não encontrada.");
+      throw new Error("Invalid WebP: VP8 frame signature not found.");
     }
     const width = readUint16BE(Uint8Array.from([
       bytes[dataOffset + 7] ?? 0,
@@ -156,7 +156,7 @@ function parseWebpChunk(
 
   if (chunkType === "VP8L") {
     if (chunkSize < 5 || bytes[dataOffset] !== 0x2f) {
-      throw new Error("WebP inválido: cabeçalho VP8L truncado ou incorreto.");
+      throw new Error("Invalid WebP: truncated or invalid VP8L header.");
     }
     const b1 = bytes[dataOffset + 1] ?? 0;
     const b2 = bytes[dataOffset + 2] ?? 0;
@@ -176,7 +176,7 @@ function parseWebp(bytes: Uint8Array): { mimeType: "image/webp"; width: number; 
   }
 
   const riffSize = readUint32LE(bytes, 4);
-  if (riffSize + 8 > bytes.byteLength) throw new Error("WebP inválido: RIFF declara mais bytes do que o arquivo contém.");
+  if (riffSize + 8 > bytes.byteLength) throw new Error("Invalid WebP: RIFF declares more bytes than the file contains.");
 
   let offset = 12;
   while (offset + 8 <= bytes.byteLength) {
@@ -187,12 +187,12 @@ function parseWebp(bytes: Uint8Array): { mimeType: "image/webp"; width: number; 
     offset += 8 + chunkSize + (chunkSize % 2);
   }
 
-  throw new Error("WebP inválido: nenhum chunk VP8X, VP8 ou VP8L foi encontrado.");
+  throw new Error("Invalid WebP: no VP8X, VP8, or VP8L chunk was found.");
 }
 
 export function inspectImage(bytes: Uint8Array): Omit<ImageMetadata, "sha256"> {
   const parsed = parsePng(bytes) ?? parseJpeg(bytes) ?? parseWebp(bytes);
-  if (!parsed) throw new Error("Formato não suportado. Use PNG, JPEG ou WebP válido.");
+  if (!parsed) throw new Error("Unsupported format. Use a valid PNG, JPEG, or WebP image.");
   return parsed;
 }
 

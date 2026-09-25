@@ -54,7 +54,7 @@ export function assertExecutableAllowed(
 ): void {
   if (executableAllowed(executable, allowedExecutables, allowAllExecutables)) return;
   throw new Error(
-    `Executável não permitido: ${executable}. Permitidos: ${allowedExecutables.join(", ")}`,
+    `Executable not allowed: ${executable}. Allowed: ${allowedExecutables.join(", ")}`,
   );
 }
 
@@ -140,7 +140,7 @@ export async function runProcess(options: {
     try {
       proc.kill("SIGKILL");
     } catch {
-      // O processo pode já ter terminado.
+      // The process may have already exited.
     }
   };
 

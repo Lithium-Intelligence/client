@@ -85,31 +85,31 @@ function requireParent(path: string): void {
 function numberField(value: unknown, name: string, fallback: number, min: number, max: number): number {
   if (value === undefined) return fallback;
   if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) {
-    throw new Error(`${name} deve ser um inteiro entre ${min} e ${max}.`);
+    throw new Error(`${name} must be an integer between ${min} and ${max}.`);
   }
   return value;
 }
 
 function booleanField(value: unknown, name: string, fallback: boolean): boolean {
   if (value === undefined) return fallback;
-  if (typeof value !== "boolean") throw new Error(`${name} deve ser boolean.`);
+  if (typeof value !== "boolean") throw new Error(`${name} must be a boolean.`);
   return value;
 }
 
 function stringList(value: unknown, name: string, fallback: string[]): string[] {
   if (value === undefined) return [...fallback];
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
-    throw new Error(`${name} deve ser uma lista de strings não vazias.`);
+    throw new Error(`${name} must be a list of non-empty strings.`);
   }
   return value.map((item) => item.trim());
 }
 
 function normalizeServerUrl(input: unknown): string {
   const value = String(input ?? "").trim();
-  if (!value) throw new Error("serverUrl é obrigatório.");
+  if (!value) throw new Error("serverUrl is required.");
   const url = new URL(value);
   if (!["https:", "http:", "wss:", "ws:"].includes(url.protocol)) {
-    throw new Error("serverUrl deve usar http(s) ou ws(s).");
+    throw new Error("serverUrl must use http(s) or ws(s).");
   }
   url.hash = "";
   url.search = "";
@@ -125,16 +125,16 @@ export function loadLithiumClientConfig(path: string, environment: Environment =
     "allowedExecutables", "allowAllExecutables", "childEnvVars", "allowAllChildEnv", "enableUnsafeShell",
   ]);
   const unknown = Object.keys(raw).filter((key) => !allowedKeys.has(key));
-  if (unknown.length) throw new Error(`Campo(s) não suportado(s) no Lithium Client config: ${unknown.join(", ")}.`);
+  if (unknown.length) throw new Error(`Unsupported field(s) in Lithium Client config: ${unknown.join(", ")}.`);
   const baseDir = dirname(path);
   const defaults = defaultLithiumClientConfigFile;
   const workspaceRoots = stringList(raw.workspaceRoots, "workspaceRoots", defaults.workspaceRoots).map((entry) => resolve(baseDir, entry));
-  if (!workspaceRoots.length) throw new Error("workspaceRoots deve conter ao menos um diretório.");
+  if (!workspaceRoots.length) throw new Error("workspaceRoots must contain at least one directory.");
   const serverUrl = normalizeServerUrl(environment.LITHIUM_SERVER_URL?.trim() || raw.serverUrl || defaults.serverUrl);
   const clientVersion = String(raw.clientVersion ?? defaults.clientVersion).trim();
-  if (!clientVersion || clientVersion.length > 64) throw new Error("clientVersion inválido.");
+  if (!clientVersion || clientVersion.length > 64) throw new Error("Invalid clientVersion.");
   const deviceNameRaw = raw.deviceName === undefined ? undefined : String(raw.deviceName).trim();
-  if (deviceNameRaw !== undefined && (!deviceNameRaw || deviceNameRaw.length > 160)) throw new Error("deviceName inválido.");
+  if (deviceNameRaw !== undefined && (!deviceNameRaw || deviceNameRaw.length > 160)) throw new Error("Invalid deviceName.");
 
   return Object.freeze({
     serverUrl,

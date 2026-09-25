@@ -18,8 +18,8 @@ import { TerminalManager } from "./terminal/manager";
 
 function connectionHint(error: string | undefined): string | undefined {
   if (!error) return undefined;
-  if (error.includes("INVALID_DEVICE_CREDENTIAL")) return 'Credencial inválida ou revogada. Execute "lithium-client.exe relink".';
-  if (error.includes("Handshake timeout") || error.includes("WebSocket transport error")) return "Verifique rede, DNS/TLS e se o endpoint Lithium está acessível.";
+  if (error.includes("INVALID_DEVICE_CREDENTIAL")) return 'Invalid or revoked credential. Run "lithium-client.exe relink".';
+  if (error.includes("Handshake timeout") || error.includes("WebSocket transport error")) return "Check the network, DNS/TLS, and whether the Lithium endpoint is reachable.";
   return error;
 }
 
@@ -37,7 +37,7 @@ function printConnectionState(snapshot: DeviceClientSnapshot, background: boolea
   }
 
   if (snapshot.state === "connected") {
-    console.log(`[OK] Conectado como ${snapshot.deviceName ?? "device"}${snapshot.deviceId ? ` (${snapshot.deviceId})` : ""}.`);
+    console.log(`[OK] Connected as ${snapshot.deviceName ?? "device"}${snapshot.deviceId ? ` (${snapshot.deviceId})` : ""}.`);
     return;
   }
   if (snapshot.state === "handshaking") {
@@ -46,10 +46,10 @@ function printConnectionState(snapshot: DeviceClientSnapshot, background: boolea
   }
   if (snapshot.state === "retrying") {
     const hint = connectionHint(snapshot.lastError);
-    console.log(`[!] Reconectando (tentativa ${snapshot.attempt})${hint ? ` — ${hint}` : "..."}`);
+    console.log(`[!] Reconnecting (attempt ${snapshot.attempt})${hint ? ` — ${hint}` : "..."}`);
     return;
   }
-  if (snapshot.state === "connecting") console.log("Conectando ao Lithium...");
+  if (snapshot.state === "connecting") console.log("Connecting to Lithium...");
 }
 
 async function main(): Promise<void> {
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
   await Promise.all(config.workspaceRoots.map(async (root) => {
     try {
       const info = await stat(root);
-      if (!info.isDirectory()) throw new Error(`Workspace root não é um diretório: ${root}`);
+      if (!info.isDirectory()) throw new Error(`Workspace root is not a directory: ${root}`);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       await mkdir(root, { recursive: true });
@@ -118,8 +118,8 @@ async function main(): Promise<void> {
     console.log(`  Device: ${clientHostname}`);
     console.log(`  Config: ${configPath}`);
     console.log(`  Workspaces: ${config.workspaceRoots.join(", ")}`);
-    console.log(`  Unsafe shell: ${config.enableUnsafeShell ? "habilitado" : "desabilitado"}`);
-    console.log('  Comandos: execute "lithium-client.exe help" em outro terminal para gerenciar este Client.');
+    console.log(`  Unsafe shell: ${config.enableUnsafeShell ? "enabled" : "disabled"}`);
+    console.log('  Commands: run "lithium-client.exe help" in another terminal to manage this Client.');
   }
 
   client.start();
@@ -138,7 +138,7 @@ async function main(): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
     clearInterval(stateTimer);
-    if (!background) console.log(`Encerrando Lithium Client (${signal})...`);
+    if (!background) console.log(`Stopping Lithium Client (${signal})...`);
     client.stop();
     await terminalManager.shutdown();
     process.exit(0);
@@ -151,6 +151,6 @@ async function main(): Promise<void> {
 void main().catch((error) => {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`Lithium Client: ${message}`);
-  if (/credential|credencial/i.test(message)) console.error('Dica: execute "lithium-client.exe relink" para registrar este computador novamente.');
+  if (/credential/i.test(message)) console.error('Tip: run "lithium-client.exe relink" to enroll this computer again.');
   process.exit(1);
 });

@@ -14,21 +14,21 @@ export function decodeBase64(
   const maxEncodedLength = Math.ceil(options.maxBytes / 3) * 4;
 
   if (base64.length > maxEncodedLength) {
-    throw new Error(`Base64 excede o limite de ${options.maxBytes} bytes decodificados.`);
+    throw new Error(`Base64 exceeds the decoded size limit of ${options.maxBytes} bytes.`);
   }
   if (base64.length % 4 !== 0 || !BASE64_PATTERN.test(base64)) {
-    throw new Error("Base64 inválido. Use Base64 padrão com padding quando necessário.");
+    throw new Error("Invalid Base64. Use standard Base64 with padding when required.");
   }
 
   const bytes = Buffer.from(base64, "base64");
   if (bytes.byteLength > options.maxBytes) {
-    throw new Error(`Conteúdo com ${bytes.byteLength} bytes excede o limite de ${options.maxBytes}.`);
+    throw new Error(`Content with ${bytes.byteLength} bytes exceeds the limit of ${options.maxBytes}.`);
   }
 
   if (options.expectedSha256) {
     const actualSha256 = sha256Hex(bytes);
     if (actualSha256 !== options.expectedSha256.toLowerCase()) {
-      throw new Error(`SHA-256 divergente: esperado ${options.expectedSha256.toLowerCase()}, recebido ${actualSha256}.`);
+      throw new Error(`SHA-256 mismatch: expected ${options.expectedSha256.toLowerCase()}, received ${actualSha256}.`);
     }
   }
 

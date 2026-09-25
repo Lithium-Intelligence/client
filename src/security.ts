@@ -23,7 +23,7 @@ async function nearestExistingParent(path: string): Promise<string> {
       return current;
     } catch {
       const parent = dirname(current);
-      if (parent === current) throw new Error("Nenhum diretório pai acessível foi encontrado.");
+      if (parent === current) throw new Error("No accessible parent directory was found.");
       current = parent;
     }
   }
@@ -34,7 +34,7 @@ export async function resolveWorkspacePath(
   requestedPath: string,
   options: { allowMissing?: boolean } = {},
 ): Promise<string> {
-  if (requestedPath.includes("\0")) throw new Error("Caminho inválido.");
+  if (requestedPath.includes("\0")) throw new Error("Invalid path.");
 
   const roots = await Promise.all(workspaceRoots.map((root) => normalizedRealpath(root)));
   const defaultRoot = roots[0];
@@ -46,7 +46,7 @@ export async function resolveWorkspacePath(
   try {
     const candidateReal = await normalizedRealpath(candidate);
     if (!isInside(root, candidateReal)) {
-      throw new Error("O caminho resolve para fora do workspace permitido.");
+      throw new Error("The path resolves outside the allowed workspace.");
     }
     return candidateReal;
   } catch (error) {
@@ -55,7 +55,7 @@ export async function resolveWorkspacePath(
     const existingParent = await nearestExistingParent(dirname(candidate));
     const existingParentReal = await normalizedRealpath(existingParent);
     if (!isInside(root, existingParentReal)) {
-      throw new Error("O diretório pai resolve para fora do workspace permitido.");
+      throw new Error("The parent directory resolves outside the allowed workspace.");
     }
     return candidate;
   }
@@ -71,5 +71,5 @@ export async function workspaceRootForPath(workspaceRoots: readonly string[], pa
 
 export async function assertRegularFile(path: string): Promise<void> {
   const info = await lstat(path);
-  if (!info.isFile()) throw new Error("O caminho não aponta para um arquivo regular.");
+  if (!info.isFile()) throw new Error("The path does not point to a regular file.");
 }

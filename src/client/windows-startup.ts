@@ -26,13 +26,13 @@ async function defaultRunProgram(executable: string, args: string[]): Promise<St
 }
 
 function requireWindows(platform: NodeJS.Platform): void {
-  if (platform !== "win32") throw new Error("Iniciar com Windows só está disponível no Lithium Client para Windows.");
+  if (platform !== "win32") throw new Error("Windows startup is only available in Lithium Client for Windows.");
 }
 
 function requireStandaloneExecutable(execPath: string): void {
   const normalized = execPath.toLowerCase().replaceAll("/", "\\");
   if (!normalized.endsWith(".exe") || normalized.endsWith("\\bun.exe")) {
-    throw new Error("Configure o início com Windows usando o lithium-client.exe distribuível, não o runtime Bun de desenvolvimento.");
+    throw new Error("Configure Windows startup using the distributable lithium-client.exe, not the development Bun runtime.");
   }
 }
 
@@ -59,7 +59,7 @@ export async function enableWindowsStartup(options: WindowsStartupOptions = {}):
   const runner = options.runProgram ?? defaultRunProgram;
   const command = windowsStartupCommand(execPath);
   const result = await runner("reg.exe", ["add", RUN_KEY, "/v", VALUE_NAME, "/t", "REG_SZ", "/d", command, "/f"]);
-  if (result.exitCode !== 0) throw new Error(result.stderr.trim() || "Não foi possível configurar o início com Windows.");
+  if (result.exitCode !== 0) throw new Error(result.stderr.trim() || "Unable to configure Windows startup.");
   return command;
 }
 
@@ -70,6 +70,6 @@ export async function disableWindowsStartup(options: WindowsStartupOptions = {})
   const status = await windowsStartupStatus({ ...options, runProgram: runner });
   if (!status.enabled) return false;
   const result = await runner("reg.exe", ["delete", RUN_KEY, "/v", VALUE_NAME, "/f"]);
-  if (result.exitCode !== 0) throw new Error(result.stderr.trim() || "Não foi possível remover o início com Windows.");
+  if (result.exitCode !== 0) throw new Error(result.stderr.trim() || "Unable to remove Windows startup.");
   return true;
 }

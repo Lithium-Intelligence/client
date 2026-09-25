@@ -136,7 +136,7 @@ export function invalidatePortSnapshot(): void {
 
 export async function processTreePids(rootPid: number): Promise<Set<number>> {
   if (!Number.isInteger(rootPid) || rootPid <= 0) {
-    throw new Error(`PID inválido para consulta de árvore: ${rootPid}.`);
+    throw new Error(`Invalid PID for process-tree lookup: ${rootPid}.`);
   }
 
   if (process.platform !== "win32") return new Set([rootPid]);
@@ -193,7 +193,7 @@ function parseNetstat(text: string, pids: ReadonlySet<number>): ProcessPort[] {
 
 export async function findPortsForProcessTree(rootPid: number): Promise<ProcessPort[]> {
   if (!Number.isInteger(rootPid) || rootPid <= 0) {
-    throw new Error(`PID inválido para consulta de portas: ${rootPid}.`);
+    throw new Error(`Invalid PID for port lookup: ${rootPid}.`);
   }
   if (process.platform !== "win32") return [];
 

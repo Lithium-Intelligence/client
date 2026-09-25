@@ -16,7 +16,7 @@ import { LithiumLinuxNodeRuntime } from "./linux-node/runtime";
 
 function requireLinux(): void {
   if (process.platform !== "linux") {
-    throw new Error("Lithium Node headless deve executar em Linux.");
+    throw new Error("Lithium Node headless must run on Linux.");
   }
 }
 
@@ -31,7 +31,7 @@ async function enroll(configPath: string, credentialPath: string): Promise<void>
     password: login.password,
   });
   await saveLithiumLinuxNodeCredential(credential, credentialPath);
-  console.log(`Lithium Node registrado como ${nodeName}. Credential persistida em arquivo privado.`);
+  console.log(`Lithium Node enrolled as ${nodeName}. Credential stored in a private file.`);
 }
 
 async function status(configPath: string, credentialPath: string): Promise<void> {

@@ -48,7 +48,7 @@ export class TerminalSession {
   }
 
   get pid(): number {
-    if (this.processPid === undefined) throw new Error(`Terminal ${this.id} ainda não possui PID.`);
+    if (this.processPid === undefined) throw new Error(`Terminal ${this.id} does not have a PID yet.`);
     return this.processPid;
   }
 
@@ -96,7 +96,7 @@ export class TerminalSession {
       const treeHandled = await terminateProcessTree(process.pid, true);
       if (!treeHandled) this.killProcess(process, "SIGKILL");
       if (!(await this.waitForExit(process, FORCE_KILL_WAIT_MS))) {
-        throw new Error(`Terminal ${this.id} não encerrou após force kill.`);
+        throw new Error(`Terminal ${this.id} did not exit after force kill.`);
       }
       return this.info();
     }
@@ -112,7 +112,7 @@ export class TerminalSession {
       const forcedTreeHandled = await terminateProcessTree(process.pid, true);
       if (!forcedTreeHandled) this.killProcess(process, "SIGKILL");
       if (!(await this.waitForExit(process, FORCE_KILL_WAIT_MS))) {
-        throw new Error(`Terminal ${this.id} não encerrou após force kill.`);
+        throw new Error(`Terminal ${this.id} did not exit after force kill.`);
       }
     }
 
@@ -138,7 +138,7 @@ export class TerminalSession {
   }
 
   dispose(): void {
-    if (this.active) throw new Error(`Terminal ${this.id} ainda está ativo e não pode ser descartado.`);
+    if (this.active) throw new Error(`Terminal ${this.id} is still active and cannot be disposed.`);
     this.process = undefined;
   }
 
@@ -193,7 +193,7 @@ export class TerminalSession {
       // Stream-reading failures should not crash the client. Preserve the failure in
       // stderr so callers can diagnose it while the process lifecycle continues.
       const message = error instanceof Error ? error.message : String(error);
-      this.logBuffer.append("stderr", `[Lithium Client] Falha ao ler ${channel}: ${message}\n`);
+      this.logBuffer.append("stderr", `[Lithium Client] Failed to read ${channel}: ${message}\n`);
     } finally {
       reader.releaseLock();
     }

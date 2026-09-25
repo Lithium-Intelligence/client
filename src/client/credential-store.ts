@@ -15,7 +15,7 @@ export interface DeviceCredentialCodec {
 
 function validateCredential(value: string): string {
   const credential = value.trim();
-  if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(credential)) throw new Error("Device credential inválida.");
+  if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(credential)) throw new Error("Invalid device credential.");
   return credential;
 }
 
@@ -91,5 +91,5 @@ export async function resolveDeviceCredential(options: {
   if (options.acquireCredential) {
     return saveDeviceCredential(await options.acquireCredential(), path, codec);
   }
-  throw new Error("Device credential ausente. Execute o Client em terminal interativo para fazer login ou use LITHIUM_DEVICE_CREDENTIAL em automação.");
+  throw new Error("Device credential is missing. Run the Client in an interactive terminal to sign in, or use LITHIUM_DEVICE_CREDENTIAL for automation.");
 }

@@ -25,7 +25,7 @@ class MutedTerminalOutput extends Writable {
 
 function requireInteractiveTerminal(): void {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    throw new Error("Primeiro acesso requer terminal interativo ou LITHIUM_DEVICE_CREDENTIAL para automação.");
+    throw new Error("First-time enrollment requires an interactive terminal or LITHIUM_DEVICE_CREDENTIAL for automation.");
   }
 }
 
@@ -56,12 +56,12 @@ async function promptHidden(label: string): Promise<string> {
 }
 
 export async function promptLithiumAccountLogin(productLabel = "Lithium Client"): Promise<LoginInput> {
-  console.log(`Primeiro acesso ao ${productLabel}.`);
-  console.log("Entre com sua conta para registrar este computador. A senha não será salva.");
-  const username = await promptVisible("Usuário: ");
-  if (!username) throw new Error("Usuário é obrigatório.");
-  const password = await promptHidden("Senha: ");
-  if (!password) throw new Error("Senha é obrigatória.");
+  console.log(`First-time setup for ${productLabel}.`);
+  console.log("Sign in to enroll this computer. Your password will not be saved.");
+  const username = await promptVisible("Username: ");
+  if (!username) throw new Error("Username is required.");
+  const password = await promptHidden("Password: ");
+  if (!password) throw new Error("Password is required.");
   return { username, password };
 }
 
@@ -70,7 +70,7 @@ function apiBase(serverUrl: string): URL {
   if (url.protocol === "wss:") url.protocol = "https:";
   if (url.protocol === "ws:") url.protocol = "http:";
   if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new Error("serverUrl inválida para onboarding.");
+    throw new Error("Invalid serverUrl for enrollment.");
   }
   url.pathname = "/";
   url.search = "";
@@ -100,7 +100,7 @@ async function requestJson<T>(fetchImpl: FetchLike, url: string, init: RequestIn
 
 function cookiePair(setCookie: string | null): string {
   const pair = setCookie?.split(";", 1)[0]?.trim();
-  if (!pair?.includes("=")) throw new Error("Servidor não retornou a sessão de onboarding.");
+  if (!pair?.includes("=")) throw new Error("The server did not return an enrollment session.");
   return pair;
 }
 
@@ -110,7 +110,7 @@ export async function revokeDeviceCredentialWithServer(options: {
   fetchImpl?: FetchLike;
 }): Promise<void> {
   const credential = options.credential.trim();
-  if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(credential)) throw new Error("Device credential inválida.");
+  if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(credential)) throw new Error("Invalid device credential.");
   const fetchImpl = options.fetchImpl ?? fetch;
   const base = apiBase(options.serverUrl);
   const response = await fetchImpl(endpoint(base, "/server/api/device-auth/revoke"), {
@@ -158,7 +158,7 @@ export async function enrollDeviceWithAccount(options: {
       headers: sessionHeaders,
     });
     if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(issued.body.secret ?? "")) {
-      throw new Error("Servidor retornou uma credencial de device inválida.");
+      throw new Error("The server returned an invalid device credential.");
     }
     return issued.body.secret;
   } finally {

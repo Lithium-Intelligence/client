@@ -6,7 +6,7 @@ type Environment = Record<string, string | undefined>;
 export function validateLinuxNodeCredential(input: string): string {
   const credential = input.trim();
   if (!/^ldev_[A-Za-z0-9_-]{20,}$/.test(credential)) {
-    throw new Error("Linux Node device credential inválida.");
+    throw new Error("Invalid Linux Node device credential.");
   }
   return credential;
 }
@@ -41,7 +41,7 @@ export async function loadLithiumLinuxNodeCredential(
   if ((options.platform ?? process.platform) !== "win32") {
     const info = await stat(path);
     if (!isPrivateCredentialMode(info.mode)) {
-      throw new Error("Linux Node credential file deve ter mode 0600/privado.");
+      throw new Error("Linux Node credential file must have private mode 0600.");
     }
   }
   return validateLinuxNodeCredential(content);
